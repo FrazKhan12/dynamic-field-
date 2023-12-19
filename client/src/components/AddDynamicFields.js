@@ -4,9 +4,16 @@ import { FaEdit } from "react-icons/fa";
 import { MdDelete, MdUpdate } from "react-icons/md";
 import { IoDuplicate } from "react-icons/io5";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import DynamicField from "./DynamicField";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setInputFields } from "../redux/inputSlice";
 
-const DynamicInputFields = () => {
-  const [inputFields, setInputFields] = useState([]);
+const Dynamicinputs = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { inputs } = useSelector((state) => state.inputs);
+  console.log(inputs);
   const [selectedType, setSelectedType] = useState("text");
   const [fieldLabel, setFieldLabel] = useState("");
   const [fieldPlaceholder, setFieldLabelPlaceholder] = useState("");
@@ -14,6 +21,7 @@ const DynamicInputFields = () => {
   const [indexed, setIndexed] = useState(null);
   const [validationType, setValidationType] = useState("none");
   const [required, setRequired] = useState(false);
+  console.log(indexed);
 
   const handleAddField = () => {
     if (fieldLabel === "") {
@@ -29,44 +37,50 @@ const DynamicInputFields = () => {
       require: required,
     };
 
-    setInputFields([...inputFields, newField]);
+    dispatch(setInputFields([...inputs, newField]));
     setFieldLabel("");
     setFieldLabelPlaceholder("");
   };
 
   const handleUpdateField = () => {
     if (indexed === null) {
-      alert("Please add label");
+      alert("Please select a field to update.");
+      return;
     }
 
-    const updatedFields = [...inputFields];
-    updatedFields[indexed].type = selectedType;
-    updatedFields[indexed].label = fieldLabel;
-    updatedFields[indexed].placeholder = fieldPlaceholder;
-    updatedFields[indexed].validate = validationType;
-    updatedFields[indexed].require = required;
+    const updatedFields = [...inputs];
+    updatedFields[indexed] = {
+      ...inputs[indexed], // Spread the existing properties
+      type: selectedType,
+      label: fieldLabel,
+      placeholder: fieldPlaceholder,
+      validate: validationType,
+      require: required,
+    };
 
-    setInputFields(updatedFields);
+    dispatch(setInputFields(updatedFields));
     setIndexed(null);
     setFieldLabel("");
+    setFieldLabelPlaceholder("");
+    // Reset other local states as needed
   };
 
   const handleEdit = (index) => {
     setIndexed(index);
-    setSelectedType(inputFields[index].type);
-    setFieldLabel(inputFields[index].label);
-    setValidationType(inputFields[index].validate);
+    setSelectedType(inputs[index].type);
+    setFieldLabel(inputs[index].label);
+    setValidationType(inputs[index].validate);
   };
 
   const handleDelete = (index) => {
-    const updatedFields = [...inputFields];
+    const updatedFields = [...inputs];
     updatedFields.splice(index, 1);
-    setInputFields(updatedFields);
+    dispatch(setInputFields(updatedFields));
   };
 
   const handleClone = (index) => {
-    const cloneFields = { ...inputFields[index] };
-    setInputFields([...inputFields, cloneFields]);
+    const cloneFields = { ...inputs[index] };
+    dispatch(setInputFields([...inputs, cloneFields]));
   };
 
   const handleDragAndDrop = (results) => {
@@ -81,24 +95,29 @@ const DynamicInputFields = () => {
       return;
 
     if (type === "group") {
-      const reorderFields = [...inputFields];
+      const reorderFields = [...inputs];
       const fieldsSourceIndex = source.index;
       const fieldsDestinationIndex = destination.index;
 
       const [removedField] = reorderFields.splice(fieldsSourceIndex, 1);
       reorderFields.splice(fieldsDestinationIndex, 0, removedField);
-      return setInputFields(reorderFields);
+      return dispatch(setInputFields(reorderFields));
     }
   };
 
   const handleContentChange = (e, index) => {
-    const updatedFields = [...inputFields];
-    updatedFields[index].label = e.target.value;
-    setInputFields(updatedFields);
+    const updatedFields = [...inputs];
+
+    updatedFields[index] = {
+      ...updatedFields[index],
+      label: e.target.value,
+    };
+
+    dispatch(setInputFields(updatedFields));
   };
   useEffect(() => {
-    setJsonData(JSON.stringify(inputFields, null, 2));
-  }, [inputFields]);
+    setJsonData(JSON.stringify(inputs, null, 2));
+  }, [inputs]);
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -113,6 +132,10 @@ const DynamicInputFields = () => {
         alert("Email is not valid!");
       }
     }
+  };
+
+  const previewFormData = ({ inputs }) => {
+    navigate("/form-data");
   };
 
   return (
@@ -192,7 +215,7 @@ const DynamicInputFields = () => {
               <Droppable droppableId="ROOT" type="group">
                 {(provided) => (
                   <div {...provided.droppableProps} ref={provided.innerRef}>
-                    {inputFields.map((field, index) => (
+                    {inputs.map((field, index) => (
                       <Draggable
                         draggableId={`field-${index}`}
                         index={index}
@@ -209,20 +232,19 @@ const DynamicInputFields = () => {
                                 type="text"
                                 value={field.label}
                                 onChange={(e) => handleContentChange(e, index)}
-                                className="block w-full bg-transparent  border-none focus:outline-none focus:border-blue-500"
+                                className="block w-full bg-transparent border-none focus:outline-none focus:border-blue-500"
                               />
 
                               <input
-                                required={field.require}
+                                required={
+                                  field.require === "true" ? true : false
+                                }
                                 type={field.type}
                                 placeholder={field.placeholder}
                                 className={`block ${
                                   field.type === "checkbox" ? "" : "w-full"
-                                } p-2 border ${
-                                  isValidEmail
-                                    ? "border-gray-300"
-                                    : "border-red-600"
-                                } rounded-md focus:outline-none focus:border-blue-500`}
+                                } p-2 border border-gray-300 
+                                        rounded-md focus:outline-none focus:border-blue-500`}
                                 onKeyDown={
                                   field.type === "email" ? handleKeyDown : null
                                 }
@@ -257,6 +279,7 @@ const DynamicInputFields = () => {
               </Droppable>
             </DragDropContext>
           </div>
+          <button onClick={previewFormData}>View Form Data</button>
         </div>
       </div>
 
@@ -270,4 +293,4 @@ const DynamicInputFields = () => {
   );
 };
 
-export default DynamicInputFields;
+export default Dynamicinputs;
