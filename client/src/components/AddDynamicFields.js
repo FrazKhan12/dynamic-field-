@@ -21,6 +21,7 @@ const Dynamicinputs = () => {
   const [indexed, setIndexed] = useState(null);
   const [validationType, setValidationType] = useState("none");
   const [required, setRequired] = useState(false);
+  const [values, setValues] = useState();
   console.log(indexed);
 
   const handleAddField = () => {
@@ -56,6 +57,7 @@ const Dynamicinputs = () => {
       placeholder: fieldPlaceholder,
       validate: validationType,
       require: required,
+      value: values,
     };
 
     dispatch(setInputFields(updatedFields));
@@ -239,6 +241,8 @@ const Dynamicinputs = () => {
                                 required={
                                   field.require === "true" ? true : false
                                 }
+                                onChange={(e) => setValues(e.target.value)}
+                                value={field.value}
                                 type={field.type}
                                 placeholder={field.placeholder}
                                 className={`block ${
