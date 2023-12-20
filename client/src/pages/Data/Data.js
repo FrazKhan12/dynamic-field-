@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const Data = () => {
-  const [products, setData] = useState([]);
+  const [data, setData] = useState([]);
 
   const getData = async () => {
     try {
@@ -17,11 +17,11 @@ const Data = () => {
 
   useEffect(() => {
     getData();
-  }, [products]);
+  }, [data]);
   return (
     <div>
       <div className="flex flex-wrap justify-center">
-        {products.map((d, index) => (
+        {data.map((d, index) => (
           <div
             key={index}
             className="mx-4 my-4 w-80 transform overflow-hidden rounded-lg bg-white dark:bg-slate-800 shadow-md duration-300 hover:scale-105 hover:shadow-lg"
