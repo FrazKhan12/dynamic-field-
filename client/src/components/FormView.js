@@ -5,11 +5,12 @@ import { useSelector } from "react-redux";
 const FormPreview = () => {
   const { inputs } = useSelector((state) => state.inputs);
   const [values, setValues] = useState();
+  console.log(inputs);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (Object.values(values).some((value) => value === "")) {
-      alert("Please fill all fields");
+    if (values === undefined || values === null) {
+      alert("there are no fields to fill");
     } else {
       console.log(values);
     }

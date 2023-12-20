@@ -1,8 +1,12 @@
 import React from "react";
-import FormPreview from "../../components/FormView";
+import Data from "../Data/Data";
 
 const Home = () => {
-  return <div></div>;
+  return (
+    <div>
+      <Data />
+    </div>
+  );
 };
 
 export default Home;
